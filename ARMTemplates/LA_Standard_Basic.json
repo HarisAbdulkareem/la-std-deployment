@@ -1,215 +1,189 @@
-
 {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
-  "parameters": {
-    "logicAppname": {
-      "type": "String"
-    },
-    "appInsightName": {
-      "type": "String"
-    },
-    "use32BitWorkerProcess": {
-      "type": "Bool"
-    },
-    "location": {
-      "defaultValue": "[resourceGroup().location]",
-      "type": "String",
-      "metadata": {
-        "description": "Location to deploy resources to."
-      }
-    },
-    "hostingPlanName": {
-      "type": "String"
-    },
-    "StorageAccountName": {
-      "type": "String"
-    },
-
-
-    "sku": {
-      "type": "String"
-    },
-    "skuCode": {
-      "type": "String"
-    },
-    "workerSize": {
-      "type": "String"
-    },
-    "workerSizeId": {
-      "type": "String"
-    },
-    "numberOfWorkers": {
-      "type": "String"
-    }
-  },
-  "variables": {
-    "fileShareName": "[concat(toLower(parameters('logicAppname')), 'b86e')]"
-  },
-    "resources": [    
-      {
-        "type": "Microsoft.Storage/storageAccounts",
-        "apiVersion": "2021-04-01",
-        "name": "[parameters('StorageAccountName')]",
-        "location": "[resourceGroup().location]",
-        "dependsOn": [       
-        ],
-        "sku": {
-          "name": "Standard_LRS",
-          "tier": "Standard"
+    "parameters": {
+        "sites_la_std_general_name": {
+            "defaultValue": "la-std-general",
+            "type": "String"
         },
-        "kind": "StorageV2",
-        "properties": {
-			 "mode": "Incremental",
-          "networkAcls": {
-            "bypass": "AzureServices",
-"virtualNetworkRules": [],
-	
-            "ipRules": [],
-            "defaultAction": "Allow"
-          },
-          "supportsHttpsTrafficOnly": true,
-          "encryption": {
-            "services": {
-              "file": {
-                "keyType": "Account",
-                "enabled": true
-              },
-              "blob": {
-                "keyType": "Account",
-                "enabled": true
-              }
-            },
-            "keySource": "Microsoft.Storage"
-          }
+        "serverfarms_asp_ws1_eastus_externalid": {
+            "defaultValue": "/subscriptions/e93d366d-b904-4e0b-bb5e-134281ec1919/resourceGroups/rg-logicapp-standard/providers/Microsoft.Web/serverfarms/asp-ws1-eastus",
+            "type": "String"
         }
-      },
-     
-     
-      {
-        "type": "Microsoft.Insights/components",
-        "apiVersion": "2020-02-02",
-        "name": "[parameters('logicAppname')]",
-        "location": "[resourceGroup().location]",
-        "kind": "web",
-        "properties": {
-			 "mode": "Incremental",
-          "Application_Type": "web"
-        }
-      },
+    },
+    "variables": {},
+    "resources": [
         {
             "type": "Microsoft.Web/sites",
-            "apiVersion": "2018-11-01",
-            "name": "[parameters('logicAppname')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[concat('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]"
-            ],
-            "tags": {},
+            "apiVersion": "2021-02-01",
+            "name": "[parameters('sites_la_std_general_name')]",
+            "location": "East US",
             "kind": "functionapp,workflowapp",
             "identity": {
+                "principalId": "",
+                "tenantId": "",
                 "type": "SystemAssigned"
             },
             "properties": {
-				 "mode": "Incremental",
-                "name": "[parameters('logicAppname')]",
-                "siteConfig": {
-                    "appSettings": [
-                        {
-                            "name": "FUNCTIONS_EXTENSION_VERSION",
-                            "value": "~3"
-                        },
-                        {
-                            "name": "FUNCTIONS_WORKER_RUNTIME",
-                            "value": "node"
-                        },
-                        {
-                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-                            "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightName')), '2015-05-01').InstrumentationKey]"
-                        },
-                        {
-                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
-                            "value": "[reference(resourceId('Microsoft.Insights/components', parameters('appInsightName')), '2015-05-01').ConnectionString]"
-                        },
-                        {
-                            "name": "AzureWebJobsStorage",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('StorageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('StorageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
-                        },
-                        {
-                            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('StorageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('StorageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
-                        },
-                        {
-                            "name": "WEBSITE_CONTENTSHARE",
-                            "value": "[variables('fileShareName')]"
-                        },
-                        {
-                            "name": "APP_KIND",
-                            "value": "workflowApp"
-                        },
-                        {
-                            "name": "WEBSITE_VNET_ROUTE_ALL",
-                            "value": "0"
-                        },
-                        {
-                            "name": "WEBSITE_DNS_SERVER",
-                            "value": "168.63.129.16"
-                        },
-                        {
-                            "name": "AzureFunctionsJobHost__extensionBundle__id",
-                            "value": "Microsoft.Azure.Functions.ExtensionBundle.Workflows",
-                            "slotSetting": false
-                        },
-                        {
-                            "name": "AzureFunctionsJobHost__extensionBundle__version",
-                            "value": "[1.*, 2.0.0)",
-                            "slotSetting": false
-                        },
-                        {
-                            "name": "WEBSITE_CONTENTOVERVNET",
-                            "value": "0",
-                            "slotSetting": false
-                        }
-                    ],
-                    "use32BitWorkerProcess": "[parameters('use32BitWorkerProcess')]",
-                    "cors": {
-                        "allowedOrigins": [
-                            "https://afd.hosting.portal.azure.net",
-                            "https://afd.hosting-ms.portal.azure.net",
-                            "https://hosting.portal.azure.net",
-                            "https://ms.hosting.portal.azure.net",
-                            "https://ema-ms.hosting.portal.azure.net",
-                            "https://ema.hosting.portal.azure.net",
-                            "https://ema.hosting.portal.azure.net"
-                        ]
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('sites_la_std_general_name'), '.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "[concat(parameters('sites_la_std_general_name'), '.scm.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
                     }
+                ],
+                "serverFarmId": "[parameters('serverfarms_asp_ws1_eastus_externalid')]",
+                "reserved": false,
+                "isXenon": false,
+                "hyperV": false,
+                "siteConfig": {
+                    "numberOfWorkers": 1,
+                    "acrUseManagedIdentityCreds": false,
+                    "alwaysOn": false,
+                    "http20Enabled": false,
+                    "functionAppScaleLimit": 0,
+                    "minimumElasticInstanceCount": 1
                 },
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
-                "clientAffinityEnabled": true
-            },
-            "resources": [
-                
-            ]
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": false,
+                "clientCertEnabled": false,
+                "clientCertMode": "Required",
+                "hostNamesDisabled": false,
+                "customDomainVerificationId": "C4AD458869BDA8F4CF4E0482134F28DB6DBCC3B364DA60BC522D2C0A8F65A8E7",
+                "containerSize": 1536,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": false,
+                "redundancyMode": "None",
+                "storageAccountRequired": false,
+                "keyVaultReferenceIdentity": "SystemAssigned"
+            }
         },
         {
-            "type": "Microsoft.Web/serverfarms",
-            "apiVersion": "2018-11-01",
-            "name": "[parameters('hostingPlanName')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [],
-            "tags": {},
-            "sku": {
-                "Tier": "[parameters('sku')]",
-                "Name": "[parameters('skuCode')]"
-            },
-            "kind": "",
+            "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+            "apiVersion": "2021-02-01",
+            "name": "[concat(parameters('sites_la_std_general_name'), '/ftp')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_la_std_general_name'))]"
+            ],
             "properties": {
-				 "mode": "Incremental",
-                "name": "[parameters('hostingPlanName')]",
-                "workerSize": "[parameters('workerSize')]",
-                "workerSizeId": "[parameters('workerSizeId')]",
-                "numberOfWorkers": "[parameters('numberOfWorkers')]",
-                "maximumElasticWorkerCount": "20"
+                "allow": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+            "apiVersion": "2021-02-01",
+            "name": "[concat(parameters('sites_la_std_general_name'), '/scm')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_la_std_general_name'))]"
+            ],
+            "properties": {
+                "allow": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2021-02-01",
+            "name": "[concat(parameters('sites_la_std_general_name'), '/web')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_la_std_general_name'))]"
+            ],
+            "properties": {
+                "numberOfWorkers": 1,
+                "defaultDocuments": [
+                    "Default.htm",
+                    "Default.html",
+                    "Default.asp",
+                    "index.htm",
+                    "index.html",
+                    "iisstart.htm",
+                    "default.aspx",
+                    "index.php"
+                ],
+                "netFrameworkVersion": "v4.0",
+                "phpVersion": "5.6",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": false,
+                "remoteDebuggingVersion": "VS2019",
+                "httpLoggingEnabled": false,
+                "acrUseManagedIdentityCreds": false,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": false,
+                "publishingUsername": "$la-std-general",
+                "scmType": "None",
+                "use32BitWorkerProcess": true,
+                "webSocketsEnabled": false,
+                "alwaysOn": false,
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": false
+                    }
+                ],
+                "loadBalancing": "LeastRequests",
+                "experiments": {
+                    "rampUpRules": []
+                },
+                "autoHealEnabled": false,
+                "vnetRouteAllEnabled": false,
+                "vnetPrivatePortsCount": 0,
+                "cors": {
+                    "allowedOrigins": [],
+                    "supportCredentials": false
+                },
+                "localMySqlEnabled": false,
+                "managedServiceIdentityId": 519,
+                "ipSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictionsUseMain": false,
+                "http20Enabled": false,
+                "minTlsVersion": "1.2",
+                "scmMinTlsVersion": "1.0",
+                "ftpsState": "AllAllowed",
+                "preWarmedInstanceCount": 1,
+                "functionAppScaleLimit": 0,
+                "functionsRuntimeScaleMonitoringEnabled": false,
+                "minimumElasticInstanceCount": 1,
+                "azureStorageAccounts": {}
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2021-02-01",
+            "name": "[concat(parameters('sites_la_std_general_name'), '/', parameters('sites_la_std_general_name'), '.azurewebsites.net')]",
+            "location": "East US",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('sites_la_std_general_name'))]"
+            ],
+            "properties": {
+                "siteName": "la-std-general-000001",
+                "hostNameType": "Verified"
             }
         }
     ]
