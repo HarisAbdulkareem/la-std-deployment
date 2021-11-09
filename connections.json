@@ -1,0 +1,32 @@
+{
+  "serviceProviderConnections": {
+    "serviceBus": {
+      "parameterValues": {
+        "connectionString": "@appsetting('serviceBus_connectionString')"
+      },
+      "serviceProvider": {
+        "id": "/serviceProviders/serviceBus"
+      },
+      "displayName": "con-sb-logicapp"
+    },
+    "serviceBus-2": {
+      "parameterValues": {
+        "connectionString": "@appsetting('serviceBus_12_connectionString')"
+      },
+      "serviceProvider": {
+        "id": "/serviceProviders/serviceBus"
+      },
+      "displayName": "con-sbq-vscode-01"
+    },
+    "AzureBlob": {
+      "parameterValues": {
+        "connectionString": "@appsetting('AzureBlob_connectionString')"
+      },
+      "serviceProvider": {
+        "id": "/serviceProviders/AzureBlob"
+      },
+      "displayName": "con-blob-saforlastdnetworkdemo"
+    }
+  },
+  "managedApiConnections": {}
+}
