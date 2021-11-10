@@ -53,6 +53,7 @@ jobs:
         cp 'connections.json' 'output/'
         #cp -r 'wf-helloworld-01' 'output/'
         cp -r 'wf-sf-servicebus-blob-01' 'output/'
+        cp -r 'wf-weather' 'output/'
     - name: Easy Zip Files
       uses: vimtor/action-zip@v1
       with:
